@@ -1,6 +1,6 @@
 # Linear Regression using Normal Equation
 
-<img src="/Users/swayam/Desktop/linear_regression/images/head.jpeg" style="zoom:50%;" />
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/head.jpeg" style="zoom:50%;" />
 
 ## Overview
 
@@ -10,7 +10,7 @@ Linear Regression is the first algorithm in the **Demystifying Machine Learning*
 
 Linear Regression in simple terms is fitting the best possible linear hypothesis *(a line or a hyperplane)* on the data having a linear relationship so that we can predict the new unknown data point with least possible error. It's not necessary to have linear relationship in data but having such can lead to approximately close predictions. For a reference take a look on the below representation.
 
-<img src="/Users/swayam/Desktop/linear_regression/images/intro_linear_reg.png" style="zoom:50%;" />
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/intro_linear_reg.png" style="zoom:50%;" />
 
 In the above picture only 1 feature *(along x-axis)* and the target *(along y-axis)* is displayed just for the sake of sinmplicity and we can see that the red line is fitting the data very nicely covering most of the variance. 
 
@@ -24,7 +24,7 @@ Let's take a very simpler problem and dataset to derive and mimic the algorithm 
 
 Assume we have a dataset in which we have only 1 feature say ***x*** and target as ***y*** such that **` x = [1,2,3] `** and **` y = [1,2,2] `** and we are going to fit the best possible line on this dataset.
 
-<img src="/Users/swayam/Desktop/linear_regression/images/plot1.png" style="zoom:50%;" />
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot1.png" style="zoom:50%;" />
 
 In the above plot, we can see that the feature is displayed along *x-axis* and target is along *y-axis* and the blue line is the best possible hypothesis through the points. **Now all we need to understand is how to come up with this best possible hypothesis that is the above blue line in our case**.
 
@@ -69,7 +69,7 @@ And if we think for a moment then it sounds right because in Linear Regression w
 
 So what we can do here ? We can't solve the above system of equations because **Y** is not in the column space of **X**. So instead   we can project the **Y** in onto the column space of **X**. It exactly equivalent to projecting one vector onto another.
 
-<img src="/Users/swayam/Desktop/linear_regression/images/Projection_and_rejection.png" style="zoom:50%;" />
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/Projection_and_rejection.png" style="zoom:50%;" />
 
 In the above representation, **a** and **b** are two vectors and the **a<sub>1</sub>** is the projection of vector **a** onto **b**. With this we can see that now we have the component of vector **a** that lies in the vector space of **b**. 
 
@@ -171,4 +171,110 @@ from the above last equation we have our **w** = **0.5** and **b** = **2/3** *(0
 
 ## Python Implementation
 
-Now it's time to get our hand dirty with code implementation and making our algorithm work for real datasets.
+Now it's time to get our hand dirty with code implementation and making our algorithm work for real datasets. In this section we're going to create a class **`NormalLinearRegression`** to handle all the computations for us and return the optimal values of **weights**.
+
+> Note: All the code files can be found on Github through [this link](https://github.com/practice404/demystifying_machine_learning/tree/master/linear_regression).
+>
+> ***And it's highly recommended to follow the notebook along with this section for better understanding.***
+
+```python
+class NormalLinearRegression:
+    def __init__(self) -> None:
+        self.X = None
+        self.Y = None
+        self.theta = None
+
+    def fit(self,x,y):
+        """
+        Returns the optimal weights.
+        parameters: 
+            x : input/feature matrix
+            y : target matrix
+        
+        Returns:
+            theta : Array of optimal value of weights.
+
+        """
+        self.X = x
+        
+        if self.X.ndim == 1: # adding extra dimension, if X is a 1-D array
+            self.X = self.X.reshape(-1,1)
+            
+        # adding extra column of 1s for the bias term
+        self.X = np.concatenate([np.ones((self.X.shape[0], 1)), self.X], axis=1)
+        
+        self.Y = y
+        self.theta = np.zeros((self.X.shape[1],1))
+
+        self.theta = self.calculate_theta()
+        self.theta = self.theta.reshape(-1,1)
+
+        return self.theta
+
+    def predict(self, x):
+        """
+        Returns the predicted target.
+        parameters: 
+            x : test input/feature matrix
+        
+        Returns:
+            y :  predicted target value.
+
+        """
+        x = np.array(x) # converting list to numpy array
+        if x.ndim == 1:
+            x = x.reshape(1,-1) # adding extra dimension in front
+        x = np.concatenate([np.ones((x.shape[0],1)), x], axis=1)
+        return np.dot(x,self.theta)
+
+    def calculate_theta(self):
+        """
+        Calculate the optimal weights.
+        parameters: None
+        Returns:
+            theta_temp : Array containing calculated value of weights
+
+        """
+        y_projection = np.dot(self.X.T, self.Y)
+        cov = np.dot(self.X.T, self.X)
+        cov_inv = np.linalg.pinv(cov)
+        theta_temp = np.dot(cov_inv, y_projection)
+
+        return theta_temp
+```
+
+
+
+Code is pretty self explanatory and I added comments wherever I found necessary but still I want to point out few things. We are adding extra column of 1s to **X** for the **bias** term. Since out **`theta`** matrix had both **weight** and **bias** terms so ***we just added extra column of 1s so that matrix multiplication handles the addition of bias term***.
+
+We are going to test our hypothesis on two datasets. Our first dataset contains 2 columns in which the first one *(only feature)* is the population of a city (in 10,000s) and the second column is the profit of a food truck in that city (in $10,000s). A negative value for profit indicates a loss. Let's visualize it on the graph.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot2.png" style="zoom:50%;" />
+
+Now let's use our **`NormalLinearRegression`** class to find the best hypothesis to fit on our data.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot3.png" style="zoom:50%;" />
+
+Great now let's find the predictions using the `params`. Class **`NormalLinearRegression`** had a method `predict` that we can use to get the predictions and after that we can use them to draw the hypothesis as shown below.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot4.png" style="zoom:50%;" />
+
+Okay our hypothesis looks pretty nice. Now let's take dataset that has multiple features, for the sake of graphical representation our next dataset contains a training set of housing prices in Portland, Oregon. The first column is the size of the house (in square feet), the second column is the number of bedrooms, and the third column is the price of the house. So in this dataset we have 2 features and 1 target. Let's visualize it on graph.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot5.png" style="zoom:50%;" />
+
+If you're wondering how I plot them, just visit the repo for this algorithm through [this link](https://github.com/practice404/demystifying_machine_learning/tree/master/linear_regression) and you'll find the notebook where all the implementations are already done for you. 
+
+Now let's find the weights of the best hypothesis for this dataset.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot6.png" style="zoom:50%;" />
+
+Awesome, now let's find the predictions and plot the hypothesis for this dataset using `predict` method of our class.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot7.png" style="zoom:50%;" />
+
+Yeah I know, it looks messy but we can uniform it as:
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot8.png" style="zoom:50%;" />
+
+Now the thing to be noted is that it's not a straight line, plotting 3D graph over 2D surface may give a feel that it's a line but it's not. It's a N-1dimensional hyperplane and in our case it's a 2D plane.
