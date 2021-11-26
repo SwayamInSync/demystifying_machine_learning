@@ -4,15 +4,15 @@
 
 ## Overview
 
-Linear Regression is the first algorithm in the **Demystifying Machine Learning** series and in this article we'll be discussing about Linear Regression using Normal equation. This article covers what is Linear Regression, how it works, maths behind normal equation method, fixing some edge cases, handling overfitting and code implementation.
+Linear Regression is the first algorithm in the **Demystifying Machine Learning** series and in this article we'll be discussing Linear Regression using Normal equation. This article covers what is Linear Regression, how it works, the maths behind the normal equation method, fixing some edge cases, handling overfitting and code implementation.
 
 ## What is Linear Regression ?
 
-Linear Regression in simple terms is fitting the best possible linear hypothesis *(a line or a hyperplane)* on the data having a linear relationship so that we can predict the new unknown data point with least possible error. It's not necessary to have linear relationship in data but having such can lead to approximately close predictions. For a reference take a look on the below representation.
+Linear Regression in simple terms is fitting the best possible linear hypothesis *(a line or a hyperplane)* on the data having a linear relationship so that we can predict the new unknown data point with the least possible error. It's not necessary to have a linear relationship in data but having such can lead to approximately close predictions. For a reference take a look at the below representation.
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/intro_linear_reg.png" style="zoom:50%;" />
 
-In the above picture only 1 feature *(along x-axis)* and the target *(along y-axis)* is displayed just for the sake of sinmplicity and we can see that the red line is fitting the data very nicely covering most of the variance. 
+In the above picture, only 1 feature *(along x-axis)* and the target *(along y-axis)* is displayed just for the sake of simplicity and we can see that the red line is fitting the data very nicely covering most of the variance. 
 
 One thing is to be noted that we call it Linear Regression but it's not always fitting a line, we call it hypothesis or hyperplane. If we have N-Dimensional data *(data having N number of features)* then we can fit a hyperplane of atmost N-Dimensions.
 
@@ -30,7 +30,7 @@ In the above plot, we can see that the feature is displayed along *x-axis* and t
 
 The equation of any line is in the format of **`y = wx + b`** where **w** is the slope and **b** is the intercept. In machine learning lingo we call **w** as **weight** and **b** as **bias**. For above line it came out to be **w = 0.5** and **b = 0.667 ** *(Don't worry! we'll see how).*
 
-Now ultimately we can say that somehow we need to calculate the **weight** and **bias** term / terms *(since 'x' is already known to us)* for hypothesis and then we could use them to get line's equation.
+Now ultimately we can say that somehow we need to calculate the **weight** and **bias** term/terms *(since 'x' is already known to us)* for hypothesis and then we could use them to get line's equation.
 
 ### Linear Algebra
 
@@ -67,7 +67,7 @@ Wait there's a problem. We can't solve the above system of equations because tar
 
 And if we think for a moment then it sounds right because in Linear Regression we fit a hypothesis to predict the target for some input with least possible error. We do not intend to predict the exact target.
 
-So what we can do here ? We can't solve the above system of equations because **Y** is not in the column space of **X**. So instead   we can project the **Y** in onto the column space of **X**. It exactly equivalent to projecting one vector onto another.
+So what we can do here? We can't solve the above system of equations because **Y** is not in the column space of **X**. So instead   we can project the **Y** in onto the column space of **X**. It is exactly equivalent to projecting one vector onto another.
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/Projection_and_rejection.png" style="zoom:50%;" />
 
@@ -245,7 +245,7 @@ class NormalLinearRegression:
 
 
 
-Code is pretty self explanatory and I added comments wherever I found necessary but still I want to point out few things. We are adding extra column of 1s to **X** for the **bias** term. Since out **`theta`** matrix had both **weight** and **bias** terms so ***we just added extra column of 1s so that matrix multiplication handles the addition of bias term***.
+Code is pretty self-explanatory and I added comments wherever I found necessary but still I want to point out few things. We are adding an extra column of 1s to **X** for the **bias** term. Since out **`theta`** matrix had both **weight** and **bias** terms so ***we just added an extra column of 1s so that matrix multiplication handles the addition of bias term***.
 
 We are going to test our hypothesis on two datasets. Our first dataset contains 2 columns in which the first one *(only feature)* is the population of a city (in 10,000s) and the second column is the profit of a food truck in that city (in $10,000s). A negative value for profit indicates a loss. Let's visualize it on the graph.
 
@@ -255,11 +255,11 @@ Now let's use our **`NormalLinearRegression`** class to find the best hypothesis
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot3.png" style="zoom:50%;" />
 
-Great now let's find the predictions using the `params`. Class **`NormalLinearRegression`** had a method `predict` that we can use to get the predictions and after that we can use them to draw the hypothesis as shown below.
+Great now let's find the predictions using the `params`. Class **`NormalLinearRegression`** had a method **`predict`** that we can use to get the predictions and after that we can use them to draw the hypothesis as shown below.
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot4.png" style="zoom:50%;" />
 
-Okay our hypothesis looks pretty nice. Now let's take dataset that has multiple features, for the sake of graphical representation our next dataset contains a training set of housing prices in Portland, Oregon. The first column is the size of the house (in square feet), the second column is the number of bedrooms, and the third column is the price of the house. So in this dataset we have 2 features and 1 target. Let's visualize it on graph.
+Okay, our hypothesis looks pretty nice. Now let's take dataset that has multiple features, for the sake of graphical representation our next dataset contains a training set of housing prices in Portland, Oregon. The first column is the size of the house (in square feet), the second column is the number of bedrooms, and the third column is the price of the house. So in this dataset we have 2 features and 1 target. Let's visualize it on graph.
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot5.png" style="zoom:50%;" />
 
@@ -281,11 +281,11 @@ Now the thing to be noted is that it's not a straight line, plotting 3D graph ov
 
 Great work people, so far we designed our own Linear Regression algorithm using Normal equation and tested it on 2 datasets with single and multiple features, you can even try it on your custom dataset to see how it works. So far so good.
 
-BUT still there's an edge case is left, let's handle it in the next section.
+BUT still, there's an edge case is left, let's handle it in the next section.
 
 ## Handling an edge case of (X<sup>T</sup>X) being non-invertible
 
-When we are deriving the Normal equation, we assumed that (X<sup>T</sup>X) to be invertible and then how we calculated it's inverse to find the matrix &theta;. But what if it's not invertible?
+When we are deriving the Normal equation, we assumed that (X<sup>T</sup>X) to be invertible and then we calculated it's inverse to find the matrix &theta;. But what if it's not invertible?
 
 Let's discuss the cases when it cannot be invertible :-
 
@@ -304,7 +304,7 @@ Suppose you have a dataset and in which the features are not linearly independen
 
 Although in our python implementation we used **`np.linalg.pinv()`** function to calculate the inverse and it uses [Singular Value Decomposition](https://youtu.be/rYz83XPxiZo) to return the pseudo inverse if the matrix in non-invertible.
 
-Another way to remove such ambiguity is to identify those features and remove them manually. OR we can use the Regularization and make it invertible. Let's see how we can use Regularization to achieve this. 
+Another way to remove such ambiguity is to identify those features and remove them manually. OR we can use Regularization and make it invertible. Let's see how we can use Regularization to achieve this. 
 
 ### Regularized Normal Equation
 
@@ -329,9 +329,9 @@ Now let's understand the above equation, look at 1<sup>st</sup> column it has on
 
 &lambda; is called the **regularization parameter**. You need to set it according to your dataset by choosing from a **set of values that should be greater 0** and select the one which gives the least **root mean square error** on your training set other than &lambda; = 0. 
 
-Let's implement this in code and see how this method works. We only need to change the `calculate_theta` method of our class which is reponsible for the calculation of **(X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>Y** .
+Let's implement this in code and see how this method works. We only need to change the **`calculate_theta`** method of our class which is reponsible for the calculation of **(X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>Y** .
 
-The modified `calculate_theta` method should look something like this:
+The modified **`calculate_theta`** method should look something like this:
 
 ```python
 def calculate_theta(self, lambda_):
@@ -363,3 +363,8 @@ Intuitively we can see that plots for &lambda; = 0 and &lambda; = 10 are quite 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot10.png" style="zoom:50%;" />
 
 We can see that &lambda; = 0 got the least error and &lambda; = 10 is slightly greater than that but just be in safer side we will pick &lambda; = 10 for our hypothesis.
+
+## Conclusion
+
+Great work everyone, we successfully learnt and implemented our first machine learning algorithm of Linear Regression using Normal equation on 2 datasets. There are few things that we need to keep in our mind while using Normal equation method. This method is not much efficient in computation time with large datasets (samples > 10,000) and the reason is the operation of calculating inverse of matrix which had a time complexity of around O(n<sup>3</sup>). So in that case ***Gradient Descent*** method comes very handy and we'll going to learn that in our next article. Also we'll be exploring Regularization in great depth in our next article.
+
