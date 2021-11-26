@@ -88,7 +88,7 @@ $$
 X^{T}X\Theta = X^{T}Y \\ 
 $$
 
-<center>Assuming (X<sup>T</sup>X) to be invertible</center>
+<center><b>Assuming (X<sup>T</sup>X) to be invertible</b></center>
 
 $$
 \Theta = (X^{T}X)^{-1}X^{T}Y
@@ -263,7 +263,7 @@ Okay our hypothesis looks pretty nice. Now let's take dataset that has multiple 
 
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot5.png" style="zoom:50%;" />
 
-If you're wondering how I plot them, just visit the repo for this algorithm through [this link](https://github.com/practice404/demystifying_machine_learning/tree/master/linear_regression) and you'll find the notebook where all the implementations are already done for you. 
+> ***If you're wondering how I plot them, just visit the repo for this algorithm through [this link](https://github.com/practice404/demystifying_machine_learning/tree/master/linear_regression) and you'll find the notebook where all the implementations are already done for you.*** 
 
 Now let's find the weights of the best hypothesis for this dataset.
 
@@ -278,3 +278,88 @@ Yeah I know, it looks messy but we can uniform it as:
 <img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot8.png" style="zoom:50%;" />
 
 Now the thing to be noted is that it's not a straight line, plotting 3D graph over 2D surface may give a feel that it's a line but it's not. It's a N-1dimensional hyperplane and in our case it's a 2D plane.
+
+Great work people, so far we designed our own Linear Regression algorithm using Normal equation and tested it on 2 datasets with single and multiple features, you can even try it on your custom dataset to see how it works. So far so good.
+
+BUT still there's an edge case is left, let's handle it in the next section.
+
+## Handling an edge case of (X<sup>T</sup>X) being non-invertible
+
+When we are deriving the Normal equation, we assumed that (X<sup>T</sup>X) to be invertible and then how we calculated it's inverse to find the matrix &theta;. But what if it's not invertible?
+
+Let's discuss the cases when it cannot be invertible :-
+
+<ul>
+    <li>(X<sup>T</sup>X) is not a square matrix</li>
+    <li>The columns or rows of (X<sup>T</sup>X) are not independent</li>
+</ul>
+
+The 1<sup>st</sup> case is obviously wrong, let's see how?
+
+Suppose the dimensions of X are (m,n) then the dimensions of X<sup>T</sup> will be (n,m). So after performing matrix multiplication the dimensions of (X<sup>T</sup>X) will be (m,m) and hence it's a square matrix.
+
+But the 2<sup>nd</sup> case can be true, let's see how?
+
+Suppose you have a dataset and in which the features are not linearly independent. For example let's say there's a feature labelled as **weight in Kg** and another feature labelled as **weight in pounds**, both the features are linearly dependent i.e we can get one feature by performing some linear transformations on another feature and this can make (X<sup>T</sup>X) as non-invertible. 
+
+Although in our python implementation we used **`np.linalg.pinv()`** function to calculate the inverse and it uses [Singular Value Decomposition](https://youtu.be/rYz83XPxiZo) to return the pseudo inverse if the matrix in non-invertible.
+
+Another way to remove such ambiguity is to identify those features and remove them manually. OR we can use the Regularization and make it invertible. Let's see how we can use Regularization to achieve this. 
+
+### Regularized Normal Equation
+
+In Regularization we add an extra matrix whose dimensions are (n+1, n+1) to (X<sup>T</sup>X) where n is the number of features and adding extra 1 denotes the extra column of 1s for bias term.
+
+Regularized Normal equation can be written as:
+$$
+\Theta = \left (  
+X^{T}X + \lambda
+\begin{bmatrix}
+0 & 0 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 1 & 0 & 0 & 0 & 0 & 0\\ 
+0 & 0 & 1 & 0 & 0 & 0 & 0\\ 
+. & . & . & 1 & . & . & .\\ 
+. & . & . & . & 1 & . & .\\ 
+. & . & . & . & . & 1 & .\\ 
+0 & 0 & 0 & 0 & 0 & 0 & 1\\ 
+\end{bmatrix}_{(n+1,n+1)}
+\right) ^{-1} X^{T}Y
+$$
+Now let's understand the above equation, look at 1<sup>st</sup> column it has only 0s no 1s because the 1st column in X is the column of 1s for the bias term and we do not regularized that column. Mathematically it can be proven that (X<sup>T</sup>X + &lambda;M) is always invertible.
+
+&lambda; is called the **regularization parameter**. You need to set it according to your dataset by choosing from a **set of values that should be greater 0** and select the one which gives the least **root mean square error** on your training set other than &lambda; = 0. 
+
+Let's implement this in code and see how this method works. We only need to change the `calculate_theta` method of our class which is reponsible for the calculation of **(X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>Y** .
+
+The modified `calculate_theta` method should look something like this:
+
+```python
+def calculate_theta(self, lambda_):
+        """
+        Calculate the optimal weights.
+        parameters: None
+        Returns:
+            theta_temp : Array containing calculated value of weights
+
+        """
+        y_projection = np.dot(self.X.T, self.Y)
+        # Creating matrix M (identity matrix with fist element 0)
+        M = np.identity(self.X.shape[1])
+        M[0,0] = 0
+        
+        cov = np.dot(self.X.T, self.X) + lambda_*M # adding lambda_ times M to X.T@X
+        cov_inv = np.linalg.pinv(cov)
+        theta_temp = np.dot(cov_inv, y_projection)
+
+        return theta_temp
+```
+
+We don't need to change anything else in our class and now let's pick some random values for &lambda; and pick the best one.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot9.png" style="zoom:50%;" />
+
+Intuitively we can see that plots for &lambda; = 0 and &lambda; = 10 are quite good, just to be sure we stored the root mean squared error in a dictionary **`errors`** let's print it  out and see which &lambda; got the least error.
+
+<img src="/Users/swayam/Desktop/Demystifying ML/linear_regression/images/plot10.png" style="zoom:50%;" />
+
+We can see that &lambda; = 0 got the least error and &lambda; = 10 is slightly greater than that but just be in safer side we will pick &lambda; = 10 for our hypothesis.
