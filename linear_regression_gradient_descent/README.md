@@ -6,3 +6,7 @@
 
 ## Overview
 
+This is the second article of **Demystifying Machine Learning** series, fankly it is basically the ***sequel*** of our previous article where we explained [**Linear Regression using Normal equation**](https://swayam-blog.hashnode.dev/linear-regression-using-normal-equation). In this article we'll be exploring another optimizing algorithm known as **Gradient Descent**, how it works, what is a cost function, mathematics behined gradient descent, Python implementation, Regularization and some extra topics like polynomial regression and using regularized polynomial regression.
+
+## How Gradient Descent works (Intuition)
+
