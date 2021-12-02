@@ -140,3 +140,380 @@ That's great, now we have all the tools we need let's jump straight into the cod
 
 ## Python Implementation
 
+In this section we'll be using Python and the formulas we derive in the previous section to create a Python class that will be able to perform Linear Regression by using Gradient Descent as optimizing algorithm to work on 3 different datasets.
+
+>Note: All the code files can be found on Github through [this link](https://github.com/practice404/demystifying_machine_learning/tree/master/linear_regression_gradient_descent).
+>
+>***And it's highly recommended to follow the notebook along with this section for better understanding.***
+
+Before we dive into writing code one important observation is to keep in mind that before using gradient descent, <u>***it's always helpful to normalize the features around its mean***.</u> The reason is that initially in dataset we can have many independent features and they can have way different values, like on average number of bedrooms can be 3-4 but the area of house feature can have way large values. Normalizing makes all the values of different features to lie on a comparable range and it also makes easier for algorithm to identify the patterns.
+$$
+x_{normalized} = \frac{x - \mu}{\sigma} \\
+where \ \mu : mean \ and \ \sigma: standard \ deviation
+$$
+
+
+```python
+class LinearRegression:
+    def __init__(self) -> None:
+        self.X = None
+        self.Y = None
+        self.parameters = None
+        self.cost_history = []
+        self.mu = None
+        self.sigma = None
+    
+    def calculate_cost(self):
+        """
+        Returns the cost and gradients.
+        parameters: None
+        
+        Returns:
+            cost : Caculated loss (scalar).
+            gradients: array containing the gradients w.r.t each parameter
+
+        """
+
+        m = self.X.shape[0]
+
+        y_hat = np.dot(self.X, self.parameters)
+        y_hat = y_hat.reshape(-1)
+        error = y_hat - self.Y
+
+        cost = np.dot(error.T, error)/(2*m) # Modified way to calculate cost
+
+        gradients = np.zeros(self.X.shape[1])
+
+        for i in range(self.X.shape[1]):
+            gradients[i] = np.mean(error * self.X[:,i])
+
+        return cost, gradients
+
+
+    def init_parameters(self):
+        """
+        Initialize the parameters as array of 0s
+        parameters: None
+        
+        Returns:None
+
+        """
+        self.parameters = np.zeros((self.X.shape[1],1))
+
+
+    def feature_normalize(self, X):
+        """
+        Normalize the samples.
+        parameters: 
+            X : input/feature matrix
+        
+        Returns:
+            X_norm : Normalized X.
+
+        """
+        X_norm = X.copy()
+        mu = np.mean(X, axis=0)
+        sigma = np.std(X, axis=0)
+
+        self.mu = mu
+        self.sigma = sigma
+
+        for n in range(X.shape[1]):
+            X_norm[:,n] = (X_norm[:,n] - mu[n]) / sigma[n]
+        return X_norm
+
+    def fit(self, x, y, learning_rate=0.01, epochs=500, is_normalize=True, verbose=0):
+        """
+        Iterates and find the optimal parameters for input dataset
+        parameters: 
+            x : input/feature matrix
+            y : target matrix
+            learning_rate: between 0 and 1 (default is 0.01)
+            epochs: number of iterations (default is 500)
+            is_normalize: boolean, for normalizing features (default is True)
+            verbose: iterations after to print cost
+        
+        Returns:
+            parameters : Array of optimal value of weights.
+
+        """
+        self.X = x
+        self.Y = y
+        self.cost_history = []
+        if self.X.ndim == 1: # adding extra dimension, if X is a 1-D array
+            self.X = self.X.reshape(-1,1)
+            is_normalize = False
+        if is_normalize:
+            self.X = self.feature_normalize(self.X)
+        self.X = np.concatenate([np.ones((self.X.shape[0],1)), self.X], axis=1)
+        self.init_parameters()
+
+        for i in range(epochs):
+            cost, gradients = self.calculate_cost()
+            self.cost_history.append(cost)
+            self.parameters -= learning_rate * gradients.reshape(-1,1)
+
+            if verbose:
+                if not (i % verbose):
+                    print(f"Cost after {i} epochs: {cost}")
+
+        return self.parameters
+
+
+    def predict(self,x, is_normalize=True):
+        """
+        Returns the predictions after fitting.
+        parameters: 
+            x : input/feature matrix
+        
+        Returns:
+            predictions : Array of predicted target values.
+
+        """
+        x = np.array(x, dtype=np.float64) # converting list to numpy array
+        if x.ndim == 1:
+            x = x.reshape(1,-1)
+        if is_normalize:
+            for n in range(x.shape[1]):
+                x[:,n] = (x[:,n] - self.mu[n]) / self.sigma[n]
+        x = np.concatenate([np.ones((x.shape[0],1)), x], axis=1)
+        return np.dot(x,self.parameters)
+```
+
+The class and it's methods are pretty obvious, try to go one by one and you'll understand what each method is doing and how it's connected to others.
+
+Still I would like to put your focus on 3 main methods:
+
+- **`calculate_cost`** : This method actually uses the formulas we derive in the previous section to calculate the cost according to certain parameters. If you carefully go through the method you may find a wierd thing that initially we mentioned cost as:
+  $$
+  J(\theta) = \frac{1}{2m} \sum^{m}_{i=1}\left ( X^{i}\theta - y^{i} \right )^{2}
+  $$
+  but in code we are calculating cost as:
+  $$
+  J(\theta) = \frac{1}{2m} (X\theta - Y)^{T}(X\theta - Y)
+  $$
+  No need to be puzzled they both are same thing, the second equation is the vectorized form of the first one. If you're aware of Linear Algebra operations you can prove to yourself that they both are same equations. We preferred the second one because oftenly vectorized operations are faster and efficient instead of using loops.
+
+- **`fit`**: This is the method where actual magic happens. It firstly normalize the features then add an extra feature of 1s for the bias term and lastly it iterates till the epochs count, calculate the cost and gradients then update each parameter simultaneously.
+
+  > We first normalize the features then we add an extra feature of 1s for bias term, because don't make any sense to normalize that extra feature which contain all 1s
+
+- **`predict`**: This method first normaliz the input then uses the optimal paramteres calculated by the `fit` method to return the predicted target values.
+
+  > Note: `predict` method uses the same &mu; and &sigma; that we calculated during the training loop from training set to normalize the input.
+
+Great now we have our class, it's time to test it on the datasets.
+
+### Testing on datasets
+
+In this sub-section we'll be using Sklearn's generated dataset for linear regression to see how our Linear Regression class is performing. Let's visulaize it on graph:
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im7.png" style="zoom:50%;" />
+
+Let's create an instance of `LinearRegression` class and fit this data on it for 500 epochs to get the optimal parameters for our hypothesis.
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im8.png" style="zoom:50%;" /> 
+
+Okay, let's see how this hypothesis looks:
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im9.png" style="zoom:50%;" />
+
+It fits it nicely, but plotting the cost is a great way to assure that everything is working fine, let's do that. `LinearRegression` class had a property of `cost_history` it stores the cost after each iteration, let's plot it:
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im10.png" style="zoom:50%;" />
+
+We can see that our cost function is always decreasing and it's a good sign that our model is working pretty good.
+
+Before moving on to next section and discuss about Regularization, I want to demostrate how we can also fit curve instead of straight line, let's see it in the next sub-section.
+
+### Polynomial Regression
+
+We basically going to take the generated dataset for linear regression from sklearn and apply some transformation on it to make it non-linear.
+
+***<u>Note: For detailed code implementation I recommend you going through the notebook from [here](https://github.com/practice404/demystifying_machine_learning/blob/master/linear_regression_gradient_descent/notebook.ipynb), since for the sake of learning I'm only showing few code cells for verification</u>***
+
+So what we did is generated the data from Sklearn's `make_regression` having 1 feature and a target column then apply the following transformation on it to make that data non-linear
+$$
+Y = 4(X + 1)^2 + X^5
+$$
+and after applying the dataset, it looks like:
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im15.png" style="zoom:50%;" />
+
+Looks good we are able to introduce non-linearity but it'll be great if it also contains some noise samples, anyway let's start working on this non-linear dataset.
+
+To make our linear regression to predict non-linear hypothesis we need to create more features (since we have only 1 here) from the features we already have. A good way to create more features is to perform some polynomial functions on the original features one-by-one. For thix example we are going to make 6 different features from the original one as:
+$$
+X1 = X \\
+X2 = X^4\\
+X3 = X^9\\
+X4 = X^6\\
+X5 = X^8\\
+X6 = e^{X}
+$$
+We will be using these X1, X2, ..., X6 as features to make our final input/feature matirx **X_**. Now let's use this **X_** matrix to predict the optimal curve.
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im16.png" style="zoom:50%;" />
+
+It looks great, our algorithm is abled to predict a fine non-linear boundary and it fits our training set very precisely. But there's a problem, we can see that our algorithm is performing very well on the training set but it's possible that it won't work good on the data outside the training set. This is known as **Overfitting** and it leads to the lack of generality in our hypothesis. 
+
+We are going to address this problem using Regularization in the next section.
+
+## Regularization
+
+With the help of Regularization we can prevent the problem of overfitting from our algorithm. Overfitting occurs when the algorithm provides heavy parameters to some features according to the training dataset and hyperparameters. This makes those features to dominate in the overall hypothesis and lead to a nice fit in training set but not so good on the samples outside the training set.
+
+The plan is to add the square of parameters by multiplying them with some big number (&lambda;) to the cost function because our algorithms's main motive is to decrease the cost function so in this way algorithm will end up giving the small parameters just to cancel the effect addition of parameters by multiplying with large number. So our final cost function gets modified to:
+$$
+J(\theta) = \frac{1}{2m} \sum^{m}_{i=1}\left ( X^{i}\theta - y^{i} \right )^{2} + \frac{\lambda}{2m}\sum^{n}_{j=1} \theta^{2}_{j}
+$$
+***Note: We denote the bias term as &theta;<sub>0</sub> and it's not needed to regularized the bias term that's why we are only considering only &theta;<sub>1</sub> to &theta;<sub>n</sub> parameters.***
+
+Since our cost function is changed that's why our formulas for gradients will also be affected. The new formula for gradient will gets modified to:
+$$
+\frac{\partial}{\partial \theta_{j}}J(\theta) = \frac{1}{m} \sum^{m}_{i=1}\left ( X^{i}\theta - y^{i} \right )(X^{i}_{j}) + \frac{\lambda}{m}\theta_{j}
+$$
+&lambda; is known as regularization parameter and it should be greater than 0. Large value of &lambda; leades to underfitting and very small values lead to overfitting, so you need to pick the right one for your dataset through iterating on some sample values.
+
+Let's implement the Regularization by modifying our `LinearRegression` class. We only need to modify the `calculate_cost` method since only this method is responsible for calculating cost and gradients both. The modified version is shown below:
+
+```python
+class LinearRegression:
+    def __init__(self) -> None:
+        self.X = None
+        self.Y = None
+        self.parameters = None
+        self.cost_history = []
+        self.mu = None
+        self.sigma = None
+    
+    def calculate_cost(self, lambda_=0):
+        """
+        Returns the cost and gradients.
+        parameters: 
+            lambda_ : value of regularization parameter (default is 0)
+        
+        Returns:
+            cost : Caculated loss (scalar).
+            gradients: array containing the gradients w.r.t each parameter
+
+        """
+        m = self.X.shape[0]
+
+        y_hat = np.dot(self.X, self.parameters)
+        y_hat = y_hat.reshape(-1)
+        error = y_hat - self.Y
+
+        cost = (np.dot(error.T, error) + lambda_*np.sum((self.parameters)**2))/(2*m)
+
+        gradients = np.zeros(self.X.shape[1])
+
+        for i in range(self.X.shape[1]):
+            gradients[i] = (np.mean(error * self.X[:,i]) + (lambda_*self.parameters[i])/m)
+
+        return cost, gradients
+
+
+    def init_parameters(self):
+        """
+        Initialize the parameters as array of 0s
+        parameters: None
+        
+        Returns:None
+
+        """
+        self.parameters = np.zeros((self.X.shape[1],1))
+
+
+    def feature_normalize(self):
+        """
+        Normalize the samples.
+        parameters: 
+            X : input/feature matrix
+        
+        Returns:
+            X_norm : Normalized X.
+
+        """
+        X_norm = self.X.copy()
+        mu = np.mean(self.X, axis=0)
+        sigma = np.std(self.X, axis=0)
+
+        self.mu = mu
+        self.sigma = sigma
+
+        for n in range(self.X.shape[1]):
+            X_norm[:,n] = (X_norm[:,n] - mu[n]) / sigma[n]
+        return X_norm
+
+    def fit(self, x, y, learning_rate=0.01, epochs=500, lambda_=0, is_normalize=True, verbose=0):
+        """
+        Iterates and find the optimal parameters for input dataset
+        parameters: 
+            x : input/feature matrix
+            y : target matrix
+            learning_rate: between 0 and 1 (default is 0.01)
+            epochs: number of iterations (default is 500)
+            is_normalize: boolean, for normalizing features (default is True)
+            verbose: iterations after to print cost
+        
+        Returns:
+            parameters : Array of optimal value of weights.
+
+        """
+        self.X = x
+        self.Y = y
+        self.cost_history = []
+        if self.X.ndim == 1: # adding extra dimension, if X is a 1-D array
+            self.X = self.X.reshape(-1,1)
+            is_normalize = False
+        if is_normalize:
+            self.X = self.feature_normalize()
+        self.X = np.concatenate([np.ones((self.X.shape[0],1)), self.X], axis=1)
+        self.init_parameters()
+
+        for i in range(epochs):
+            cost, gradients = self.calculate_cost(lambda_=lambda_)
+            self.cost_history.append(cost)
+            self.parameters -= learning_rate * gradients.reshape(-1,1)
+
+            if verbose:
+                if not (i % verbose):
+                    print(f"Cost after {i} epochs: {cost}")
+
+        return self.parameters
+
+
+    def predict(self,x, is_normalize=True):
+        """
+        Returns the predictions after fitting.
+        parameters: 
+            x : input/feature matrix
+        
+        Returns:
+            predictions : Array of predicted target values.
+
+        """
+        x = np.array(x, dtype=np.float64) # converting list to numpy array
+        if x.ndim == 1:
+            x = x.reshape(1,-1)
+        if is_normalize:
+            for n in range(x.shape[1]):
+                x[:,n] = (x[:,n] - self.mu[n]) / self.sigma[n]
+        x = np.concatenate([np.ones((x.shape[0],1)), x], axis=1)
+        return np.dot(x,self.parameters)
+```
+
+Now we have our regularized version of `LinearRegression` class. Let's address the previous problem of overfitting on polynomial regression by using a set of values for &lambda; to pick the right one.
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/linear_regression_gradient_descent/images/im17.png" style="zoom:50%;" />
+
+From the plots, I think that &lambda; = 10 and &lambda; = 20 looks good. As we can see that as we increase the values of &lambda;, our algorithm start to perform even worst on the training set and leading to **Underfitting**. So it gets really important to select the right value of &lambda; for our dataset.
+
+## Conclusion
+
+Great work everyone, we have successfully learnt and implemented Linear Regression using Gradient Descent. There are a few things that we need to keep in our mind that this optimizing algorithm requires more hyperparameters than the Normal equaltion that we learnt in previous article but irrespective of that, gradient descent works efficiently on the larger dataset covering the drawback of Normal equation method.
+
+In the next article we'll be learning our first supervised classification algorithm known as **Logistic Regression** and going to understand how to Regularization prevents the overfitting there. 
+
+I hope you have learnt something new, for more updates on upcoming articles get connected with me through [Twitter](https://twitter.com/_s_w_a_y_a_m_) and stay tuned for more. Till then enjoy your day and keep learning.
