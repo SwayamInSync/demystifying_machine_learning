@@ -47,7 +47,11 @@ h(\theta) = \frac{1}{1+e^{-(\theta^{T}X)}} \\
  & \text{ 0 ; } h(\theta)\leqslant 0.5   
 \end{cases}
 $$
-This hypothesis is different than the hypothesis of Linear Regression.
+This hypothesis is different than the hypothesis of Linear Regression. Yeah looks fair enough, let me give you a visualisation about overall how Logistic Regression works.
+
+<img src="/Users/swayam/Desktop/demystifying_machine_learning/logistic_regression/images/13.png" style="zoom:70%;" />
+
+> ***Note:- X0 is basially 1, we will it later why?***
 
 ### Cost function
 
