@@ -1,10 +1,13 @@
 appnope==0.1.2
 backcall==0.2.0
+certifi==2021.10.8
+charset-normalizer==2.0.9
 cycler==0.11.0
 debugpy==1.5.1
 decorator==5.1.0
 entrypoints==0.3
 fonttools==4.28.2
+idna==3.3
 ipykernel==6.5.1
 ipython==7.29.0
 jedi==0.18.1
@@ -29,6 +32,7 @@ pyparsing==3.0.6
 python-dateutil==2.8.2
 pytz==2021.3
 pyzmq==22.3.0
+requests==2.26.0
 scikit-learn==1.0.1
 scipy==1.7.3
 seaborn==0.11.2
@@ -38,4 +42,5 @@ threadpoolctl==3.0.0
 tomli==1.2.2
 tornado==6.1
 traitlets==5.1.1
+urllib3==1.26.7
 wcwidth==0.2.5
